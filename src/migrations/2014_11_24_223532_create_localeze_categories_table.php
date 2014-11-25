@@ -21,7 +21,7 @@ class CreateLocalezeCategoriesTable extends Migration {
             $table->unique(array('sic_code'));
         });
 
-        $json = file_get_contents("localeze_categories.json");
+        $json = file_get_contents("../localeze_categories.json");
         DB::table('localeze_categories')->insert(json_decode($json));
     }
 
