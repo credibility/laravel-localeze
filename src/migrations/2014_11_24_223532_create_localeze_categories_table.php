@@ -22,7 +22,7 @@ class CreateLocalezeCategoriesTable extends Migration {
         });
 
         $json = file_get_contents(__DIR__."/../localeze_categories.json");
-        DB::table('localeze_categories')->insert(json_decode($json));
+        DB::table('localeze_categories')->insert(json_decode($json, true));
     }
 
     /**
