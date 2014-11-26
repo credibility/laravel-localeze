@@ -15,6 +15,9 @@ class Localeze {
     /** @var Application  */
     public $app;
 
+    /** @var \Illuminate\Database\DatabaseManager */
+    public $db;
+
     /**
      * @param LocalezeRequester $requester
      * @param Application $app
@@ -23,6 +26,7 @@ class Localeze {
     {
         $this->requester = $requester;
         $this->app = $app;
+        $this->db = $app->make('db');
     }
 
     /**
@@ -147,7 +151,7 @@ class Localeze {
 
     public function getCategoryFromSic($sic)
     {
-        $category = DB::select('select category_name from localeze_categories where id = ?',$sic);
+        $category = $this->db->select('select category_name from localeze_categories where id = ?',$sic);
         return $category;
     }
 

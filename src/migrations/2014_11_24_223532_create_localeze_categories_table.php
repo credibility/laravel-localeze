@@ -13,11 +13,9 @@ class CreateLocalezeCategoriesTable extends Migration {
     {
         Schema::create('localeze_categories', function($table)
         {
-            $table->increments('id');
             $table->string('sic_code')->index();
             $table->string('category_name');
             $table->integer('category_id');
-            $table->timestamps();
             $table->unique(array('sic_code'));
         });
 
