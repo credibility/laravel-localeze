@@ -63,7 +63,7 @@ class LocalezeBusiness {
     }
 
     //change to add attribute ID, attribute name, cat name, and cat id
-    protected function addCategory($category)
+    public function addCategory($category)
     {
         $this->categories[] = $category;
     }
