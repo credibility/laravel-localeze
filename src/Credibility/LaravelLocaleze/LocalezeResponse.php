@@ -4,8 +4,8 @@ namespace Credibility\LaravelLocaleze;
 
 class LocalezeResponse {
 
-    protected $response;
-    protected $errorCode;
+    public $response;
+    public $errorCode;
 
     /**
      * @param $response

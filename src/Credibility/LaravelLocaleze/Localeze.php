@@ -30,15 +30,28 @@ class Localeze {
     }
 
     /**
+     * Returns if the business is available, owned by you, or unavailable
      * @param LocalezeBusiness $business
-     * @return LocalezeResponse
+     * @return string
      */
     public function checkAvailability(LocalezeBusiness $business)
     {
         $elements = ["3722"];
         $this->addServiceKey(1510,$business->toXML());
         $response = $this->requester->run($this->serviceKeys,$elements);
-        return new LocalezeResponse($response);
+        $localezeResponse = new LocalezeResponse($response);
+        $status = "UNAVAILABLE";
+
+        switch($localezeResponse->errorCode) {
+            case 1:
+                $status = "AVAILABLE";
+                break;
+            case 2:
+                $status = "OWNED";
+                break;
+        }
+
+        return $status;
     }
 
     /**
@@ -149,10 +162,18 @@ class Localeze {
         return new LocalezeFilter();
     }
 
+    /**
+     * @param $sic
+     * @return bool
+     */
     public function getCategoryFromSic($sic)
     {
-        $category = $this->db->select('select category_name from localeze_categories where sic_code = ?',[$sic]);
-        return $category;
+        $category = $this->db->select('select category_name from localeze_categories where id = ?',[$sic]);
+        if(!empty($category)){
+            return $category[0]['category_name'];
+        } else {
+            return false;
+        }
     }
 
     /**
