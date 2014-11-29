@@ -168,7 +168,7 @@ class Localeze {
      */
     public function getCategoryFromSic($sic)
     {
-        $category = $this->db->select('select category_name from localeze_categories where id = ?',[$sic]);
+        $category = $this->db->select('select category_name from localeze_categories where sic_code = ?',[$sic]);
         if(!empty($category)){
             return $category[0]['category_name'];
         } else {
