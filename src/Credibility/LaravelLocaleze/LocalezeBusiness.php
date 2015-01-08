@@ -43,7 +43,9 @@ class LocalezeBusiness {
         $record = $BPMSPost->addChild('Record');
         foreach($this as $key => $value){
             if($key != "categories"){
-                $record->addChild(ucfirst($key),htmlentities($value));
+                if($value){
+                    $record->addChild(ucfirst($key),htmlentities($value));
+                }
             } else {
                 $categories = $record->addChild("Categories");
                 $count = 0;

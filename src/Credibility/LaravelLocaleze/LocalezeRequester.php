@@ -36,6 +36,7 @@ class LocalezeRequester {
             "elements" => $elements,
             "serviceKeys" => $serviceKeys
         );
+
         return $this->soap->query($setup);
     }
 
