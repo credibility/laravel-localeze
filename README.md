@@ -7,7 +7,7 @@ To install via composer:
 }
 ```
 
-Upon install, run the package migrations
+Upon install, publish the package migrations
 ```
-php artisan migrate --package="credibility/laravel-localeze"
+php artisan migrate:publish credibility/laravel-localeze
 ```
