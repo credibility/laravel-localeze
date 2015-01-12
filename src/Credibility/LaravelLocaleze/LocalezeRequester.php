@@ -26,7 +26,7 @@ class LocalezeRequester {
      * @param array $elements
      * @return mixed
      */
-    public function run(Array $serviceKeys, Array $elements)
+    public function run(Array &$serviceKeys, Array $elements)
     {
         $origination = $this->getOrigination();
         $setup = array(
@@ -36,7 +36,7 @@ class LocalezeRequester {
             "elements" => $elements,
             "serviceKeys" => $serviceKeys
         );
-
+        $serviceKeys = [];
         return $this->soap->query($setup);
     }
 
