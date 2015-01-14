@@ -3,7 +3,7 @@ This package wraps the Localeze SOAP API for distributing business data.
 To install via composer:
 ```
 "require": {
-    "credibility/laravel-localeze": "0.1"
+    "credibility/laravel-localeze": "0.1.*"
 }
 ```
 
