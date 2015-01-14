@@ -177,6 +177,16 @@ class Localeze {
     }
 
     /**
+     * @param $category
+     * return bool
+     */
+    public function isValidCategory($category)
+    {
+        $result = $this->db->select('select category_name from localeze_categories where category_name = ?',[$category]);
+        return !empty($result);
+    }
+
+    /**
      * @return LocalezeResponse
      */
     private function search(){
