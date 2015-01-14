@@ -7,6 +7,11 @@ To install via composer:
 }
 ```
 
+Publish configuration files:
+```
+php artisan config:publish credibility/laravel-localeze
+```
+
 Upon install, publish the package migrations
 ```
 php artisan migrate:publish credibility/laravel-localeze

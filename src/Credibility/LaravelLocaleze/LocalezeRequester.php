@@ -17,7 +17,7 @@ class LocalezeRequester {
     {
         //move from class constant to package constant
         $this->app = $app;
-        $wsdl = $wsdl ?: $this->app->make('config')->get('laravel-localeze::wsdl');
+        $wsdl = $this->app->make('config')->get('laravel-localeze::wsdl');
         $this->soap = new \SoapClient($wsdl);
     }
 
@@ -32,7 +32,7 @@ class LocalezeRequester {
         $setup = array(
             "origination" => $origination,
             "transId" => 1,
-            "serviceId" => "CustomerServiceID",
+            "serviceId" => $this->app->make('config')->get('laravel-localeze::serviceId'),
             "elements" => $elements,
             "serviceKeys" => $serviceKeys
         );
