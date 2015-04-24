@@ -41,23 +41,28 @@ class LocalezeBusiness {
         $BPMSPost = new \SimpleXMLElement('<BPMSPost/>');
         $BPMSPost->addAttribute("Edition","1.1");
         $record = $BPMSPost->addChild('Record');
-        foreach($this as $key => $value){
-            if($key != "categories"){
-                if($value){
-                    $record->addChild(ucfirst($key),htmlentities($value));
+
+        foreach($this as $key => $value) {
+            if($key != "categories") {
+                if($value) {
+                    $record->addChild(ucfirst($key), htmlentities($value));
                 }
             } else {
                 $categories = $record->addChild("Categories");
                 $count = 0;
-                foreach($this->categories as $catValue){
+
+                foreach($this->categories as $catValue) {
+
                     $category = $categories->addChild("Category");
-                    if($count == 0){
-                        $category->addChild("Type","Primary");
+
+                    if($count == 0) {
+                        $category->addChild("Type", "Primary");
                         $count++;
                     } else {
-                        $category->addChild("Type","Alt".$count++);
+                        $category->addChild("Type", "Alt".$count++);
                     }
-                    $category->addChild("Name",htmlentities($catValue));
+
+                    $category->addChild("Name", htmlentities($catValue));
                 }
             }
         }
@@ -69,5 +74,4 @@ class LocalezeBusiness {
     {
         $this->categories[] = $category;
     }
-
 }

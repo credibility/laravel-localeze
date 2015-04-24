@@ -3,19 +3,34 @@
 namespace Credibility\LaravelLocaleze;
 
 use Illuminate\Foundation\Application;
+use Illuminate\Database\DatabaseManager;
 
 class Localeze {
+
+    const TAXONOMY_QUERY_ELEMENT_KEY = 2935;
+    const BUSINESS_POST_ELEMENT_KEY = 3700;
+    const BUSINESS_CLOSE_ELEMENT_KEY = 3710;
+    const SUBSCRIPTION_ADMINISTRATION_ELEMENT_KEY = 3712;
+    const QUERY_DETAIL_ELEMENT_KEY = 3720;
+    const QUERY_SUMMARY_ELEMENT_KEY = 3721;
+    const CHECK_AVAILABILITY_ELEMENT_KEY = 3722;
+
+    const PHONE_NUMBER_SERVICE_KEY = 1;
+    const ZIP_CODE_SERVICE_KEY = 1393;
+    const BUSINESS_NAME_SERVICE_KEY = 1396;
+    const QUERY_FORMAT_SERVICE_KEY = 1501;
+    const BUSINESS_INFORMATION_SERVICE_KEY = 1510;
+    const BPMS_PERMANENT_BUSINESS_RECORD_SERVICE_KEY = 1511;
+    const RECORD_ID_SERVICE_KEY = 1513;
+    const LICENSE_INFORMATION_SERVICE_KEY = 1518;
 
     /** @var LocalezeRequester  */
     public $requester;
 
-    /** @var array  */
-    public $serviceKeys = [];
-
     /** @var Application  */
     public $app;
 
-    /** @var \Illuminate\Database\DatabaseManager */
+    /** @var DatabaseManager */
     public $db;
 
     /**
@@ -36,10 +51,10 @@ class Localeze {
      */
     public function checkAvailability(LocalezeBusiness $business)
     {
-        $elements = ["3722"];
-        $this->addServiceKey(1510,$business->toXML());
-        $response = $this->requester->run($this->serviceKeys,$elements);
-        $localezeResponse = new LocalezeResponse($response);
+        $localezeResponse  = $this->processLocalezeRequest(
+            [self::CHECK_AVAILABILITY_ELEMENT_KEY],
+            [self::BUSINESS_INFORMATION_SERVICE_KEY => $business->toXML()]);
+
         $status = "UNAVAILABLE";
 
         switch($localezeResponse->errorCode) {
@@ -60,10 +75,10 @@ class Localeze {
      */
     public function businessPost(LocalezeBusiness $business)
     {
-        $elements = ["3700"];
-        $this->addServiceKey(1510,$business->toXML());
-        $response = $this->requester->run($this->serviceKeys,$elements);
-        return new LocalezeResponse($response);
+        return $this->processLocalezeRequest(
+            [self::BUSINESS_POST_ELEMENT_KEY],
+            [self::BUSINESS_INFORMATION_SERVICE_KEY => $business->toXML()]
+        );
     }
 
     /**
@@ -72,10 +87,10 @@ class Localeze {
      */
     public function taxonomyQuery($category = "ACTIVEHEADINGS")
     {
-        $elements = ["2935"];
-        $this->addServiceKey(1501,$category);
-        $response = $this->requester->run($this->serviceKeys, $elements);
-        return new LocalezeResponse($response);
+        return $this->processLocalezeRequest(
+            [self::TAXONOMY_QUERY_ELEMENT_KEY],
+            [self::QUERY_FORMAT_SERVICE_KEY => $category]
+        );
     }
 
     /**
@@ -86,10 +101,10 @@ class Localeze {
     //does not reopen business if called again
     public function businessClose(LocalezeBusiness $business)
     {
-        $elements = ["3710"];
-        $this->addServiceKey(1510,$business->toXML());
-        $response = $this->requester->run($this->serviceKeys,$elements);
-        return new LocalezeResponse($response);
+        return $this->processLocalezeRequest(
+            [self::BUSINESS_CLOSE_ELEMENT_KEY],
+            [self::BUSINESS_INFORMATION_SERVICE_KEY => $business->toXML()]
+        );
     }
 
     /**
@@ -98,20 +113,23 @@ class Localeze {
      */
     public function subscriptionAdministration(LocalezeBusiness $business)
     {
-        $elements = ["3712"];
-        $this->addServiceKey(1510,$business->toXML());
         //License has an ID, a status (ACTIVE or DISABLED), and a renewal method (1 - not renew, 2 - auto)
-        $this->addServiceKey(1518,"LICENSE INFO");
-        $response = $this->requester->run($this->serviceKeys,$elements);
-        return new LocalezeResponse($response);
+        return $this->processLocalezeRequest(
+            [self::SUBSCRIPTION_ADMINISTRATION_ELEMENT_KEY],
+            [
+                self::BUSINESS_INFORMATION_SERVICE_KEY => $business->toXML(),
+                self::LICENSE_INFORMATION_SERVICE_KEY => "LICENSE INFO"
+            ]
+        );
     }
 
     public function summaryOfBusinesses(LocalezeFilter $filter)
     {
-        $elements = ["3721"];
-        $this->addServiceKey(1513,$filter->toXml());
-        $response = $this->requester->run($this->serviceKeys,$elements);
-        return new LocalezeResponse($response);
+        return $this->processLocalezeRequest(
+            [self::QUERY_SUMMARY_ELEMENT_KEY],
+            [self::RECORD_ID_SERVICE_KEY => $filter->toXML()]
+        );
+
     }
 
     /**
@@ -120,8 +138,9 @@ class Localeze {
      */
     public function phoneSearch($phone)
     {
-        $this->addServiceKey(1,$phone);
-        return $this->search();
+        return $this->search([
+            self::PHONE_NUMBER_SERVICE_KEY => $phone
+        ]);
     }
 
     /**
@@ -131,9 +150,10 @@ class Localeze {
      */
     public function businessAndZipSearch($businessName, $zip)
     {
-        $this->addServiceKey(1396,$businessName);
-        $this->addServiceKey(1393, $zip);
-        return $this->search();
+        return $this->search([
+            self::BUSINESS_NAME_SERVICE_KEY => $businessName,
+            self::ZIP_CODE_SERVICE_KEY => $zip
+        ]);
     }
 
     /**
@@ -142,8 +162,9 @@ class Localeze {
      */
     public function recordIdSearch($id)
     {
-        $this->addServiceKey(1511,$id);
-        return $this->search();
+        return $this->search([
+            self::BPMS_PERMANENT_BUSINESS_RECORD_SERVICE_KEY => $id
+        ]);
     }
 
     /**
@@ -168,12 +189,14 @@ class Localeze {
      */
     public function getCategoryFromSic($sic)
     {
-        $category = $this->db->select('select category_name from localeze_categories where sic_code = ?',[$sic]);
-        if(!empty($category)){
-            return $category[0]->category_name;
-        } else {
-            return false;
-        }
+        $category = $this->db->select('
+            SELECT category_name
+            FROM localeze_categories
+            WHERE sic_code = ?',
+            [$sic]
+        );
+
+        return !empty($category) ? $category[0]->category_name : false;
     }
 
     /**
@@ -182,25 +205,35 @@ class Localeze {
      */
     public function isValidCategory($category)
     {
-        $result = $this->db->select('select category_name from localeze_categories where category_name = ?',[$category]);
+        $result = $this->db->select('
+            SELECT category_name
+            FROM localeze_categories
+            WHERE category_name = ?',
+            [$category]
+        );
+
         return !empty($result);
+    }
+
+    private function processLocalezeRequest($elementKeys, $serviceKeys)
+    {
+        $request = new LocalezeRequest($elementKeys);
+
+        foreach($serviceKeys as $key => $value){
+            $request->addServiceKey($key, $value);
+        }
+
+        return $this->requester->process($request);
     }
 
     /**
      * @return LocalezeResponse
      */
-    private function search(){
-        $elements = ["3720"];
-        $response = $this->requester->run($this->serviceKeys,$elements);
-        return new LocalezeResponse($response);
-    }
-
-    /**
-     * @param $id
-     * @param $value
-     */
-    private function addServiceKey($id,$value)
+    private function search(array $serviceKeys)
     {
-        $this->serviceKeys[] = ["id" => $id, "value" => $value];
+        return $this->processLocalezeRequest(
+            [self::QUERY_DETAIL_ELEMENT_KEY],
+            $serviceKeys
+        );
     }
 }

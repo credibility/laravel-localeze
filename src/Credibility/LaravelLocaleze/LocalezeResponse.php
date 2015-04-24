@@ -2,9 +2,18 @@
 
 namespace Credibility\LaravelLocaleze;
 
-class LocalezeResponse {
+class LocalezeResponse
+{
+    /** @var array  */
+    public $data = [];
 
-    public $response;
+    /**
+     * DEPRECATED
+     * @var array
+     */
+    public $response = [];
+
+    /** @var integer */
     public $errorCode;
 
     /**
@@ -13,17 +22,53 @@ class LocalezeResponse {
     public function __construct($response)
     {
         $xml = new \SimpleXMLElement($response->response->result->element->value);
-        $this->response = json_decode(json_encode($xml),true);
+        $this->data = $this->xmlToArray($xml);
+        $this->errorCode = $this->getErrorCode($this->data);
 
-        //The error message location is inconsistent across the API
-        if(isset($this->response['ErrorCode'])) {
-            $this->errorCode = $this->response['ErrorCode'];
-        } elseif(isset($this->response['Error'])) {
-            $this->errorCode = $this->response['Error'];
-        }
-
+        // Setting value to deprecated property
+        $this->response = $this->data;
     }
 
+    /**
+     * Determine if the response is a successful response
+     *
+     * @return bool
+     */
+    public function isSuccessful()
+    {
+        return $this->errorCode !== 0;
+    }
 
+    /**
+     * Get error code from data array
+     *
+     * The error message is inconsistent depending on the request being made. So we check for the existence of
+     * 'ErrorCode' or 'Error' to pull the error code.
+     *
+     * @param $data
+     * @return null
+     */
+    private function getErrorCode($data)
+    {
+        $errorCode = null;
 
+        if(isset($data['ErrorCode'])) {
+            $errorCode = $data['ErrorCode'];
+        } else if(isset($data['Error'])) {
+            $errorCode = $data['Error'];
+        }
+
+        return $errorCode;
+    }
+
+    /**
+     * Converts XML to array
+     *
+     * @param $xml
+     * @return mixed
+     */
+    private function xmlToArray($xml)
+    {
+        return json_decode(json_encode($xml),true);
+    }
 }
